@@ -10,11 +10,13 @@ const {
 const getContactsController = async (req, res) => {
     const { _id: userId } = req.user
     let {
-        skip = 0,
         limit = 5,
+        page = 1,
         favorite
     } = req.query
     limit = limit > 5 ? 5 : limit
+    page = page > 0 ? page : 1
+    const skip = (page - 1) * limit
 
     const contacts = await getContacts(userId, favorite, skip, limit)
     res.json({contacts, skip, limit})

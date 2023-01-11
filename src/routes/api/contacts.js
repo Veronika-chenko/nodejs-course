@@ -1,15 +1,22 @@
 const express = require('express')
-const { getContactsController,
+const router = express.Router()
+
+const { authMiddleware } = require('../middlewares/authMiddleware')
+const {
+    addContactValidation,
+    changeContactValidation,
+    updateStatusValidation
+} = require('../middlewares/contactValidation')
+const { asyncWrapper } = require('../../helpers/apiHelpers')
+
+const {
+    getContactsController,
     getContactByIdController,
     removeContactController,
     addContactController,
     updateContactController,
-    updateStatusContactController } = require('../../controllers/contactsControllers')
-
-const router = express.Router()
-const { authMiddleware } = require('../middlewares/authMiddleware')
-const { addContactValidation, changeContactValidation, updateStatusValidation } = require('../middlewares/contactValidation')
-const { asyncWrapper } = require('../../helpers/apiHelpers')
+    updateStatusContactController
+} = require('../../controllers/contactsControllers')
 
 router.use(authMiddleware)
 

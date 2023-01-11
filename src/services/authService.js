@@ -3,78 +3,57 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
 const registration = async ({email, password}) => {
-    try {
-        const user = new User({ email, password })
-        await user.save();
-        console.log("user: ", user)
-        return user
-    } catch (error) {
-        console.log(error.message)
-    }
+    const user = new User({ email, password})
+    await user.save();
+    return user
 }
 
 const login = async ({email, password}) => {
-    try {
-        const user = await User.findOne({email})
-    
-        if (!user) {
-            return null
-        }
+    const user = await User.findOne({email})
 
-        if (!await bcrypt.compare(password, user.password)) {
-            return null
-        }
-
-        const token = jwt.sign({
-            _id: user._id,
-        }, process.env.JWT_SECRET)
-        await User.findOneAndUpdate(user._id, { $set: {token: token} },)
-
-        return {token, user}
-    } catch (error) {
-        console.log(error)
+    if (!user) {
+        return null
     }
+
+    if (!await bcrypt.compare(password, user.password)) {
+        return null
+    }
+
+    const token = jwt.sign({
+        _id: user._id,
+    }, process.env.JWT_SECRET)
+    await User.findOneAndUpdate(user._id, { $set: {token: token} },)
+
+    return {token, user}
 }
 
 const logout = async (id) => {
-    try {
-        const user = await User.findByIdAndUpdate(id, {$set: {token: null}})
-    
-        if (!user) {
-            return null
-        }
+    const user = await User.findByIdAndUpdate(id, {$set: {token: null}})
 
-        return user
-    } catch (error) {
-        console.log(error)
+    if (!user) {
+        return null
     }
+
+    return user
 }
 
 const getCurrentUser = async (id) => {
-    try {
-        const user = await User.findById(id, {email: 1, subscription: 1, _id: 0 } )
-        if (!user) {
-            return null
-        }
-        return user
-    } catch (error) {
-        console.log(error)
+    const user = await User.findById(id, {email: 1, subscription: 1, _id: 0 } )
+    if (!user) {
+        return null
     }
+    return user
 }
 
 const updateSubscription = async (id, subscription) => {
-    try {
-        const user = await User.findByIdAndUpdate(
-            id,
-            { $set: { subscription } },
-            { new: true, _id: 0 })
-        if (!user) {
-            return null
-        }
-        return user
-    } catch (error) {
-        console.log(error)
+    const user = await User.findByIdAndUpdate(
+        id,
+        { $set: { subscription } },
+        { new: true, _id: 0 })
+    if (!user) {
+        return null
     }
+    return user
 }
 
 module.exports = {

@@ -3,8 +3,8 @@ const { subscriptionTypes } = require('../../db/userModel')
 
 const subscriptionValidation = Joi.object({
     subscription: Joi.string()
-    .valid(...subscriptionTypes)
-    .required(),
+        .valid(...subscriptionTypes)
+        .required(),
 })
 
 module.exports = {

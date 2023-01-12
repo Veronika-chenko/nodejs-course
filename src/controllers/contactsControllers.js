@@ -7,14 +7,26 @@ const {
     updateStatusContact
 } = require('../services/contactsService')
 
-const getContactsController = async (_, res, next) => {
-    const contacts = await getContacts()
-    res.json({contacts})
+const getContactsController = async (req, res) => {
+    const { _id: userId } = req.user
+    let {
+        limit = 5,
+        page = 1,
+        favorite
+    } = req.query
+    limit = limit > 5 ? 5 : limit
+    page = page > 0 ? page : 1
+    const skip = (page - 1) * limit
+
+    const contacts = await getContacts(userId, favorite, skip, limit)
+    res.json({contacts, skip, limit})
 }
 
 const getContactByIdController = async (req,res) => {
     const { contactId } = req.params;
-    const contact = await getContactById(contactId)
+    const {_id: userId} = req.user
+
+    const contact = await getContactById(contactId, userId)
     if (!contact) {
         return res.status(404).json({"message": "Contact not found"})
     }
@@ -22,31 +34,36 @@ const getContactByIdController = async (req,res) => {
 }
   
 const removeContactController = async (req, res) => {
-    const { contactId } = req.params;
-    const contactDelete = await removeContact(contactId)
+    const { contactId } = req.params
+    const { _id: userId } = req.user
+    
+    const contactDelete = await removeContact(contactId, userId)
     if (!contactDelete) {
         return res.status(404).json({"message": "Contact not found"})
     }
     res.json({"message": "contact deleted"})
 }
 
-const addContactController = async (req, res, next) => {
-    const newContact = await addContact(req.body)
+const addContactController = async (req, res) => {
+    const { _id: userId } = req.user
+    const newContact = await addContact(req.body, userId)
     res.status(201).json({newContact})
 }
 
-const updateContactController = async (req, res, next) => {
+const updateContactController = async (req, res) => {
     const { contactId } = req.params;
-    const contactUpdate = await updateContact(contactId, req.body)
+    const {_id: userId} = req.user
+    const contactUpdate = await updateContact(contactId, req.body, userId)
     if (!contactUpdate) {
         return res.status(404).json({"message": "Contact not found"})
     } 
     res.json({contactUpdate})
 }
  
-const updateStatusContactController = async (req, res, next) => {
+const updateStatusContactController = async (req, res) => {
     const { contactId } = req.params;
-    const contactUpdateStatus = await updateStatusContact(contactId, req.body)
+    const {_id: userId} = req.user
+    const contactUpdateStatus = await updateStatusContact(contactId, req.body, userId)
     if (!contactUpdateStatus) {
         return res.status(404).json({"message": "Contact not found"})
     }

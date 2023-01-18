@@ -1,24 +1,33 @@
+const gravatar = require('gravatar');
+// const Jimp = require('jimp');
 const {
     registration,
     login,
     logout,
     getCurrentUser,
-    updateSubscription
+    updateSubscription,
+    updateAvatar
 } = require('../services/authService')
 
 const registrationController = async (req, res) => {
-    const newUser = await registration(req.body)
+    const userAvatar = gravatar.url(req.body.email, // відразу згенерувати йому аватар по його email
+        { protocol: 'http' }
+    );
+    console.log('userAvatar:', userAvatar)
+    // const {email, password} = req.body
+    const newUser = await registration(req.body, userAvatar)
 
     if (!newUser) {
         return res.status(409).json({"message": "Email in use"})
     }
 
-    const { email, subscription } = newUser
+    const { email, subscription, avatarURL } = newUser
     
     res.status(201).json({
         "user": {
             email,
-            subscription
+            subscription,
+            avatarURL
         }
     })
 }
@@ -68,11 +77,35 @@ const updateSubscriptionController = async (req, res) => {
 
     res.json({email, subscription})
 }
+
+const updateAvatarController = async (req, res) => {
+    const user = req.user._id
+    const { path } = req.file
+    
+    console.log('path: ', path)
+    console.log("req.body:", req.file)
+    const avatarURL = await updateAvatar(user, req.body) 
+    
+    if (!avatarURL) {
+        return res.status(401).json({"message": "Not authorized"})
+    }
+    res.json({avatarURL})
+}
+
+// Jimp.read(avatar, (err, avatar) => {
+//   if (err) throw err;
+//   avatar
+//     .resize(20, 250) // resize
+//     .quality(60) // set JPEG quality
+//     .greyscale() // set greyscale
+//     .write('lena-small-bw.jpg'); // save
+// });
   
 module.exports = {
     registrationController,
     loginController,
     logoutController,
     getCurrentController,
-    updateSubscriptionController
+    updateSubscriptionController,
+    updateAvatarController
 }

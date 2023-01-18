@@ -2,8 +2,9 @@ const { User } = require('../db/userModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 
-const registration = async ({email, password}) => {
-    const user = new User({ email, password})
+const registration = async ({email, password}, avatarURL) => {
+    const user = new User({ email, password, avatarURL})
+    console.log("userresult:", {email, password, avatarURL })
     await user.save();
     return user
 }
@@ -49,7 +50,19 @@ const updateSubscription = async (id, subscription) => {
     const user = await User.findByIdAndUpdate(
         id,
         { $set: { subscription } },
-        { new: true, _id: 0 })
+        { new: true})
+    if (!user) {
+        return null
+    }
+    return user
+}
+
+const updateAvatar = async (id, avatar) => {
+    console.log("avatar:", avatar)
+    const user = await User.findByIdAndUpdate(
+        id,
+        { $set: { avatar } },
+        { new: true })
     if (!user) {
         return null
     }
@@ -61,5 +74,6 @@ module.exports = {
     login,
     logout,
     getCurrentUser,
-    updateSubscription
+    updateSubscription,
+    updateAvatar
 }

@@ -18,7 +18,10 @@ const userSchema = new mongoose.Schema({
     enum: subscriptionTypes,
     default: "starter"
   },
-  avatarURL: String,
+  avatarURL: {
+    type: String,
+    require: true,
+  },
   token: {
     type: String,
     default: null,

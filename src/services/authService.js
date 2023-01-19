@@ -58,10 +58,9 @@ const updateSubscription = async (id, subscription) => {
 }
 
 const updateAvatar = async (id, avatar) => {
-    console.log("avatar:", avatar)
     const user = await User.findByIdAndUpdate(
         id,
-        { $set: { avatar } },
+        { $set: { avatarURL: avatar } },
         { new: true })
     if (!user) {
         return null

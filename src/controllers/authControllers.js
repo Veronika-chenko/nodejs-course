@@ -1,5 +1,9 @@
-const gravatar = require('gravatar');
-// const Jimp = require('jimp');
+const fs = require('fs').promises
+const path = require('path')
+const gravatar = require('gravatar')
+const { v4: uuidv4 } = require('uuid')
+const Jimp = require('jimp'); 
+
 const {
     registration,
     login,
@@ -7,14 +11,12 @@ const {
     getCurrentUser,
     updateSubscription,
     updateAvatar
-} = require('../services/authService')
+} = require('../services/authService');
 
 const registrationController = async (req, res) => {
-    const userAvatar = gravatar.url(req.body.email, // відразу згенерувати йому аватар по його email
+    const userAvatar = gravatar.url(req.body.email,
         { protocol: 'http' }
     );
-    console.log('userAvatar:', userAvatar)
-    // const {email, password} = req.body
     const newUser = await registration(req.body, userAvatar)
 
     if (!newUser) {
@@ -63,7 +65,7 @@ const getCurrentController = async (req, res) => {
         return res.status(401).json({"message": "Not authorized"})
     }
 
-    res.json({user})
+    res.json({ user })
 }
 
 const updateSubscriptionController = async (req, res) => {
@@ -75,31 +77,36 @@ const updateSubscriptionController = async (req, res) => {
         return res.status(404).json({"message": "Not found"})
     }
 
-    res.json({email, subscription})
+    res.json({ email, subscription })
 }
-
+ 
 const updateAvatarController = async (req, res) => {
-    const user = req.user._id
-    const { path } = req.file
+    try {
+        const userId = req.user._id
+        const { path: tmpPath, originalname } = req.file
+        
+        const [extention] = originalname.split('.').reverse()
+        const newName = `${uuidv4()}.${extention}`
+        const newPath = path.resolve('./public/avatars')
+        const uploadPath = path.join(newPath, newName)
+        
+        await fs.rename(tmpPath, uploadPath)
+        const avatarURL = path.join('avatars', newName)
     
-    console.log('path: ', path)
-    console.log("req.body:", req.file)
-    const avatarURL = await updateAvatar(user, req.body) 
-    
-    if (!avatarURL) {
-        return res.status(401).json({"message": "Not authorized"})
+        const user = await updateAvatar(userId, avatarURL)
+        if (!user) {
+            return res.status(401).json({"message": "Not authorized"})
+        }
+        Jimp.read(uploadPath, (err, img) => {
+            if (err) throw err;
+            img.resize(250, 250).write(uploadPath);
+        });
+        res.json({ avatarURL })
+    } catch (error) {
+        await fs.unlink(req.file.path)
+        throw error
     }
-    res.json({avatarURL})
 }
-
-// Jimp.read(avatar, (err, avatar) => {
-//   if (err) throw err;
-//   avatar
-//     .resize(20, 250) // resize
-//     .quality(60) // set JPEG quality
-//     .greyscale() // set greyscale
-//     .write('lena-small-bw.jpg'); // save
-// });
   
 module.exports = {
     registrationController,

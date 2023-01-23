@@ -1,8 +1,5 @@
-const fs = require('fs').promises
-const path = require('path')
 const gravatar = require('gravatar')
-const { v4: uuidv4 } = require('uuid')
-const Jimp = require('jimp'); 
+const { handleAndRenameFile } = require('../helpers/avatarHandler')
 
 const {
     registration,
@@ -81,31 +78,15 @@ const updateSubscriptionController = async (req, res) => {
 }
  
 const updateAvatarController = async (req, res) => {
-    try {
-        const userId = req.user._id
-        const { path: tmpPath, originalname } = req.file
-        
-        const [extention] = originalname.split('.').reverse()
-        const newName = `${uuidv4()}.${extention}`
-        const newPath = path.resolve('./public/avatars')
-        const uploadPath = path.join(newPath, newName)
-        
-        await fs.rename(tmpPath, uploadPath)
-        const avatarURL = path.join('avatars', newName)
-    
-        const user = await updateAvatar(userId, avatarURL)
-        if (!user) {
-            return res.status(401).json({"message": "Not authorized"})
-        }
-        Jimp.read(uploadPath, (err, img) => {
-            if (err) throw err;
-            img.resize(250, 250).write(uploadPath);
-        });
-        res.json({ avatarURL })
-    } catch (error) {
-        await fs.unlink(req.file.path)
-        throw error
+    const userId = req.user._id
+    const avatarURL = await handleAndRenameFile(req.file)
+
+    const user = await updateAvatar(userId, avatarURL)
+    if (!user) {
+        return res.status(401).json({"message": "Not authorized"})
     }
+
+    res.json({ avatarURL })
 }
   
 module.exports = {

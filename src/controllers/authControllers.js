@@ -1,5 +1,4 @@
-const gravatar = require('gravatar')
-const { handleAndRenameFile } = require('../helpers/avatarHandler')
+const gravatar = require('gravatar');
 
 const {
     registration,
@@ -16,10 +15,6 @@ const registrationController = async (req, res) => {
     );
     const newUser = await registration(req.body, userAvatar)
 
-    if (!newUser) {
-        return res.status(409).json({"message": "Email in use"})
-    }
-
     const { email, subscription, avatarURL } = newUser
     
     res.status(201).json({
@@ -33,10 +28,6 @@ const registrationController = async (req, res) => {
 
 const loginController = async (req, res) => {
     const user = await login(req.body)
-    if (!user) {
-        return res.status(401).json({"message": "Email or password is wrong"})
-    }
-
     const { token, user: { email, subscription } } = user 
 
     res.json({
@@ -46,46 +37,28 @@ const loginController = async (req, res) => {
 }
 
 const logoutController = async (req, res) => {
-    const user = await logout(req.user._id)
-    
-    if (!user) {
-        return res.status(401).json({"message": "Not authorized"})
-    }
-
+    await logout(req.user._id)
     res.sendStatus(204)
 }
 
 const getCurrentController = async (req, res) => {
     const user = await getCurrentUser(req.user._id)
-
-    if (!user) {
-        return res.status(401).json({"message": "Not authorized"})
-    }
-
     res.json({ user })
 }
 
 const updateSubscriptionController = async (req, res) => {
     const user = req.user._id
-    const { subscription: newSubscription } = req.body;
+    const { subscription: newSubscription } = req.body
     const { email, subscription } = await updateSubscription(user, newSubscription)
-    
-    if (!email) {
-        return res.status(404).json({"message": "Not found"})
-    }
 
     res.json({ email, subscription })
 }
  
 const updateAvatarController = async (req, res) => {
     const userId = req.user._id
-    const avatarURL = await handleAndRenameFile(req.file)
+    const { avatarURL } = req.file
 
-    const user = await updateAvatar(userId, avatarURL)
-    if (!user) {
-        return res.status(401).json({"message": "Not authorized"})
-    }
-
+    await updateAvatar(userId, avatarURL)
     res.json({ avatarURL })
 }
   

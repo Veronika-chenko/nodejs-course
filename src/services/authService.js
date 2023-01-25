@@ -1,38 +1,45 @@
-const { User } = require('../db/userModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = process.env
+const { User } = require('../db/userModel')
+const { HttpError } = require('../helpers/apiHelpers')
 
 const registration = async ({email, password}, avatarURL) => {
-    const user = new User({ email, password, avatarURL})
-    console.log("userresult:", {email, password, avatarURL })
-    await user.save();
-    return user
+    try {
+        const user = await User.create({ email, password, avatarURL })
+        return user
+    } catch (error) {
+        if (error.message.includes('E11000 duplicate key error')) {
+            throw new HttpError(409, "Email in use")
+        }
+        throw error
+    }
 }
 
 const login = async ({email, password}) => {
-    const user = await User.findOne({email})
-
+    const user = await User.findOne({ email })
     if (!user) {
-        return null
+        throw new HttpError(401, "Email or password is wrong")
     }
 
-    if (!await bcrypt.compare(password, user.password)) {
-        return null
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if (!isPasswordValid) {
+        throw new HttpError(401, "Email or password is wrong")
     }
 
     const token = jwt.sign({
         _id: user._id,
-    }, process.env.JWT_SECRET)
-    await User.findOneAndUpdate(user._id, { $set: {token: token} },)
+    }, JWT_SECRET)
+    await User.findOneAndUpdate(user._id, {token: token})
 
     return {token, user}
 }
 
 const logout = async (id) => {
-    const user = await User.findByIdAndUpdate(id, {$set: {token: null}})
+    const user = await User.findByIdAndUpdate(id, {token: null})
 
     if (!user) {
-        return null
+        throw new HttpError(401, "Not authorized")
     }
 
     return user
@@ -41,7 +48,7 @@ const logout = async (id) => {
 const getCurrentUser = async (id) => {
     const user = await User.findById(id, {email: 1, subscription: 1, _id: 0 } )
     if (!user) {
-        return null
+        throw new HttpError(401, "Not authorized")
     }
     return user
 }
@@ -49,21 +56,23 @@ const getCurrentUser = async (id) => {
 const updateSubscription = async (id, subscription) => {
     const user = await User.findByIdAndUpdate(
         id,
-        { $set: { subscription } },
-        { new: true})
+        { subscription },
+        { new: true }
+    )
     if (!user) {
-        return null
+        throw new HttpError(404, "Not found")
     }
     return user
 }
 
-const updateAvatar = async (id, avatar) => {
+const updateAvatar = async (id, avatarURL) => {
     const user = await User.findByIdAndUpdate(
         id,
-        { $set: { avatarURL: avatar } },
-        { new: true })
+        { avatarURL },
+        { new: true }
+    )
     if (!user) {
-        return null
+        throw new HttpError(401, "Not authorized")
     }
     return user
 }

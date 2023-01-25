@@ -1,9 +1,20 @@
 const asyncWrapper = (controller) => {
-  return (req, res, next) => {
-    controller(req, res).catch(next)
+  return async (req, res, next) => {
+    try {
+        await controller(req, res, next);
+    } catch (error) {
+        return next(error)
+    }
   }
 }
 
+function HttpError(status, message) {
+    const err = new Error(message);
+    err.status = status;
+    return err
+}
+
 module.exports = {
-  asyncWrapper
+  asyncWrapper,
+  HttpError
 }

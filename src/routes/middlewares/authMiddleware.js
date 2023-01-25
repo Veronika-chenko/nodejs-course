@@ -1,23 +1,33 @@
 const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = process.env
 const { User } = require('../../db/userModel')
+const { HttpError } = require('../../helpers/apiHelpers')
 
 module.exports = {
     authMiddleware: async (req, res, next) => {
-        const [, token] = req.headers.authorization.split(' ')
+        const [type, token] = req.headers.authorization.split(' ')
+
+        if (type !== 'Bearer') {
+            throw HttpError(401, "Token type is not valid");
+        }
 
         if (!token) {
-            return res.status(401).json({"message": "Not authorized"})
+            throw HttpError(401, "Not authorized");
         }
 
-        const userToken = jwt.decode(token, process.env.JWT_SECRET)
-        const user = await User.findById(userToken?._id)
+        try {
+            const userToken = jwt.verify(token, JWT_SECRET)
+            const user = await User.findById(userToken._id)
 
-        if (!user || user.token !== token) {
-            return res.status(401).json({"message": "Not authorized"})
+            req.token = token
+            req.user = user
+        } catch (error) {
+            if (error.name === 'JsonWebTokenError') {
+                throw HttpError(401, "jwt token is not valid");
+            }
+            throw error
         }
         
-        req.token = token
-        req.user = user
         next()
     },
 }

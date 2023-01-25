@@ -15,12 +15,13 @@ const {
     updateSubscriptionController,
     updateAvatarController
 } = require('../../controllers/authControllers')
+const { handleAndRenameFile } = require('../middlewares/handleAvatarMiddleware')
 
 router.post('/register', userValidation, asyncWrapper(registrationController))
 router.get('/login', userValidation, asyncWrapper(loginController))
-router.post('/logout', authMiddleware, asyncWrapper(logoutController))
-router.get('/current', authMiddleware, asyncWrapper(getCurrentController))
-router.patch('/', authMiddleware, subscriptionMiddleware, asyncWrapper(updateSubscriptionController))
-router.patch('/avatars', authMiddleware, uploadMiddleware.single('avatar'), asyncWrapper(updateAvatarController))
+router.post('/logout', asyncWrapper(authMiddleware), asyncWrapper(logoutController))
+router.get('/current', asyncWrapper(authMiddleware), asyncWrapper(getCurrentController))
+router.patch('/', asyncWrapper(authMiddleware), subscriptionMiddleware, asyncWrapper(updateSubscriptionController))
+router.patch('/avatars', asyncWrapper(authMiddleware), uploadMiddleware.single('avatar'), handleAndRenameFile, asyncWrapper(updateAvatarController))
 
 module.exports = router

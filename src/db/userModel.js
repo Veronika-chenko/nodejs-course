@@ -26,7 +26,11 @@ const userSchema = new mongoose.Schema({
     type: String,
     default: null,
   }
-})
+  },
+  {
+    versionKey: false,
+  }
+)
 
 userSchema.pre('save', async function() {
   if (this.isNew) {

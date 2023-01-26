@@ -1,3 +1,4 @@
+const { HttpError } = require('../helpers/apiHelpers')
 const {
     getContacts,
     getContactById,
@@ -9,6 +10,7 @@ const {
 
 const getContactsController = async (req, res) => {
     const { _id: userId } = req.user
+
     let {
         limit = 5,
         page = 1,
@@ -24,24 +26,9 @@ const getContactsController = async (req, res) => {
 
 const getContactByIdController = async (req,res) => {
     const { contactId } = req.params;
-    const {_id: userId} = req.user
+    const contact = await getContactById(contactId)
 
-    const contact = await getContactById(contactId, userId)
-    if (!contact) {
-        return res.status(404).json({"message": "Contact not found"})
-    }
     res.json({contact})
-}
-  
-const removeContactController = async (req, res) => {
-    const { contactId } = req.params
-    const { _id: userId } = req.user
-    
-    const contactDelete = await removeContact(contactId, userId)
-    if (!contactDelete) {
-        return res.status(404).json({"message": "Contact not found"})
-    }
-    res.json({"message": "contact deleted"})
 }
 
 const addContactController = async (req, res) => {
@@ -49,24 +36,31 @@ const addContactController = async (req, res) => {
     const newContact = await addContact(req.body, userId)
     res.status(201).json({newContact})
 }
+  
+const removeContactController = async (req, res) => {
+    const { contactId } = req.params
+    
+    await removeContact(contactId)
+    res.json({"message": "contact deleted"})
+}
 
 const updateContactController = async (req, res) => {
     const { contactId } = req.params;
-    const {_id: userId} = req.user
-    const contactUpdate = await updateContact(contactId, req.body, userId)
-    if (!contactUpdate) {
-        return res.status(404).json({"message": "Contact not found"})
-    } 
+    if (!req.body) {
+        throw new HttpError(400, "missing fields")
+    }
+    const contactUpdate = await updateContact(contactId, req.body)
+
     res.json({contactUpdate})
 }
  
 const updateStatusContactController = async (req, res) => {
     const { contactId } = req.params;
-    const {_id: userId} = req.user
-    const contactUpdateStatus = await updateStatusContact(contactId, req.body, userId)
-    if (!contactUpdateStatus) {
-        return res.status(404).json({"message": "Contact not found"})
+    if (!req.body) {
+        throw new HttpError(400, "missing field favorite")
     }
+    const contactUpdateStatus = await updateStatusContact(contactId, req.body)
+
     res.json({contactUpdateStatus})
 }
 

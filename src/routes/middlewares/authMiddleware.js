@@ -8,11 +8,11 @@ module.exports = {
         const [type, token] = req.headers.authorization.split(' ')
 
         if (type !== 'Bearer') {
-            throw HttpError(401, "Token type is not valid");
+            throw HttpError(401, "Token type is not valid")
         }
 
         if (!token) {
-            throw HttpError(401, "Not authorized");
+            throw HttpError(401, "Not authorized")
         }
 
         try {
@@ -23,7 +23,7 @@ module.exports = {
             req.user = user
         } catch (error) {
             if (error.name === 'JsonWebTokenError') {
-                throw HttpError(401, "jwt token is not valid");
+                throw HttpError(401, "jwt token is not valid")
             }
             throw error
         }

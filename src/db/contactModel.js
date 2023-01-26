@@ -19,7 +19,11 @@ const contactSchema = new mongoose.Schema({
       type: String,
       ref: 'user',
     }
-});
+  },
+  {
+    versionKey: false,
+  }
+);
 
 const Contact = mongoose.model('Contact', contactSchema)
   

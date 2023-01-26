@@ -18,7 +18,7 @@ const {
     updateStatusContactController
 } = require('../../controllers/contactsControllers')
 
-router.use(authMiddleware)
+router.use(asyncWrapper(authMiddleware))
 
 router.get('/', asyncWrapper(getContactsController))
 router.get('/:contactId', asyncWrapper(getContactByIdController))

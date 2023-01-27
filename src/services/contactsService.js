@@ -1,5 +1,5 @@
 const { Contact } = require('../db/contactModel')
-const { HttpError } = require('../helpers/apiHelpers')
+const { WrongParamsError } = require('../helpers/errors')
 
 const getContacts = async (owner, favorite, skip, limit) => {
     const filteredContacts = !favorite ? { owner } : { owner, favorite: favorite }
@@ -13,7 +13,7 @@ const getContacts = async (owner, favorite, skip, limit) => {
 const getContactById = async (contactId) => {
     const contact = await Contact.findById(contactId)
     if (!contact) {
-        throw new HttpError(404, "Contact not found")
+        throw new WrongParamsError("Contact not found")
     };
     return contact
 }
@@ -27,7 +27,7 @@ const addContact = async (body, owner) => {
 const removeContact = async (contactId) => {
     const contact = await Contact.findByIdAndDelete(contactId)
     if (!contact) {
-        throw new HttpError(404, "Contact not found")
+        throw new WrongParamsError("Contact not found")
     }
 }
 
@@ -38,7 +38,7 @@ const updateContact = async (contactId, body) => {
         { new: true }) 
 
     if (!contactUpdate) {
-        throw new HttpError(404, "Contact not found")
+        throw new WrongParamsError("Contact not found")
     }
     return contactUpdate
 }
@@ -51,7 +51,7 @@ const updateStatusContact = async (contactId, favorite, owner) => {
     )
 
     if (!contactUpdateStatus) {
-        throw new HttpError(404, "Contact not found")
+        throw new WrongParamsError("Contact not found")
     }
     return contactUpdateStatus
 }

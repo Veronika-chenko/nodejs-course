@@ -14,7 +14,6 @@ const registrationController = async (req, res) => {
         { protocol: 'http' }
     );
     const newUser = await registration(req.body, userAvatar)
-
     const { email, subscription, avatarURL } = newUser
     
     res.status(201).json({

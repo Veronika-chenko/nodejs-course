@@ -2,15 +2,16 @@ const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
 const { JWT_SECRET } = process.env
 const { User } = require('../db/userModel')
-const { HttpError } = require('../helpers/apiHelpers')
+const { UnauthorizedError, WrongParamsError, ConflictError } = require('../helpers/errors')
 
 const registration = async ({email, password}, avatarURL) => {
     try {
         const user = await User.create({ email, password, avatarURL })
+
         return user
     } catch (error) {
         if (error.message.includes('E11000 duplicate key error')) {
-            throw new HttpError(409, "Email in use")
+            throw new ConflictError("Email in use")
         }
         throw error
     }
@@ -19,12 +20,12 @@ const registration = async ({email, password}, avatarURL) => {
 const login = async ({email, password}) => {
     const user = await User.findOne({ email })
     if (!user) {
-        throw new HttpError(401, "Email or password is wrong")
+        throw new UnauthorizedError("Email or password is wrong")
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password)
     if (!isPasswordValid) {
-        throw new HttpError(401, "Email or password is wrong")
+        throw new UnauthorizedError("Email or password is wrong")
     }
 
     const token = jwt.sign({
@@ -39,7 +40,7 @@ const logout = async (id) => {
     const user = await User.findByIdAndUpdate(id, {token: null})
     
     if (!user) {
-        throw new HttpError(401, "Not authorized")
+        throw new UnauthorizedError("Not authorized")
     }
 
     return user
@@ -48,8 +49,9 @@ const logout = async (id) => {
 const getCurrentUser = async (id) => {
     const user = await User.findById(id, {email: 1, subscription: 1, _id: 0 } )
     if (!user) {
-        throw new HttpError(401, "Not authorized")
+        throw new UnauthorizedError("Not authorized")
     }
+
     return user
 }
 
@@ -60,7 +62,7 @@ const updateSubscription = async (id, subscription) => {
         { new: true }
     )
     if (!user) {
-        throw new HttpError(404, "Not found")
+        throw new WrongParamsError("Not found")
     }
     return user
 }
@@ -72,7 +74,7 @@ const updateAvatar = async (id, avatarURL) => {
         { new: true }
     )
     if (!user) {
-        throw new HttpError(401, "Not authorized")
+        throw new UnauthorizedError("Not authorized")
     }
     return user
 }

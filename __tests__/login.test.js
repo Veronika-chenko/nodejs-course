@@ -1,8 +1,9 @@
-/* eslint-disable no-undef */
+const { describe, expect, it, beforeAll, afterAll } = require('@jest/globals')
+
 const mongoose = require('mongoose')
 const dotenv = require('dotenv')
 dotenv.config()
-mongoose.set("strictQuery", false);
+mongoose.set("strictQuery", false)
 
 const supertest = require('supertest')
 

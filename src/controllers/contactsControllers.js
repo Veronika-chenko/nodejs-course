@@ -1,4 +1,3 @@
-const { HttpError } = require('../helpers/apiHelpers')
 const {
     getContacts,
     getContactById,
@@ -34,21 +33,19 @@ const getContactByIdController = async (req,res) => {
 const addContactController = async (req, res) => {
     const { _id: userId } = req.user
     const newContact = await addContact(req.body, userId)
+
     res.status(201).json({newContact})
 }
   
 const removeContactController = async (req, res) => {
     const { contactId } = req.params
-    
     await removeContact(contactId)
-    res.json({"message": "contact deleted"})
+
+    res.json({"message": "Contact deleted"})
 }
 
 const updateContactController = async (req, res) => {
     const { contactId } = req.params;
-    if (!req.body) {
-        throw new HttpError(400, "missing fields")
-    }
     const contactUpdate = await updateContact(contactId, req.body)
 
     res.json({contactUpdate})
@@ -56,9 +53,6 @@ const updateContactController = async (req, res) => {
  
 const updateStatusContactController = async (req, res) => {
     const { contactId } = req.params;
-    if (!req.body) {
-        throw new HttpError(400, "missing field favorite")
-    }
     const contactUpdateStatus = await updateStatusContact(contactId, req.body)
 
     res.json({contactUpdateStatus})

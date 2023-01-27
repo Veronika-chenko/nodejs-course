@@ -22,6 +22,6 @@ router.get('/login', userValidation, asyncWrapper(loginController))
 router.post('/logout', asyncWrapper(authMiddleware), asyncWrapper(logoutController))
 router.get('/current', asyncWrapper(authMiddleware), asyncWrapper(getCurrentController))
 router.patch('/', asyncWrapper(authMiddleware), subscriptionMiddleware, asyncWrapper(updateSubscriptionController))
-router.patch('/avatars', asyncWrapper(authMiddleware), uploadMiddleware.single('avatar'), handleAndRenameFile, asyncWrapper(updateAvatarController))
+router.patch('/avatars', asyncWrapper(authMiddleware), uploadMiddleware.single('avatar'), asyncWrapper(handleAndRenameFile), asyncWrapper(updateAvatarController))
 
 module.exports = router

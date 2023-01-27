@@ -6,7 +6,7 @@ const { HttpError } = require('../../helpers/apiHelpers')
 module.exports = {
     authMiddleware: async (req, res, next) => {
         const [type, token] = req.headers.authorization.split(' ')
-
+        
         if (type !== 'Bearer') {
             throw HttpError(401, "Token type is not valid")
         }
@@ -14,8 +14,8 @@ module.exports = {
         if (!token) {
             throw HttpError(401, "Not authorized")
         }
-
-        try {
+        
+        try {    
             const userToken = jwt.verify(token, JWT_SECRET)
             const user = await User.findById(userToken._id)
 

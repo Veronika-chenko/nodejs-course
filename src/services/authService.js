@@ -37,7 +37,7 @@ const login = async ({email, password}) => {
 
 const logout = async (id) => {
     const user = await User.findByIdAndUpdate(id, {token: null})
-
+    
     if (!user) {
         throw new HttpError(401, "Not authorized")
     }

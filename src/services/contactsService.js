@@ -1,4 +1,5 @@
 const { Contact } = require('../db/contactModel')
+const { WrongParamsError } = require('../helpers/errors')
 
 const getContacts = async (owner, favorite, skip, limit) => {
     const filteredContacts = !favorite ? { owner } : { owner, favorite: favorite }
@@ -9,44 +10,52 @@ const getContacts = async (owner, favorite, skip, limit) => {
     return contacts;
 }
 
-const getContactById = async (contactId, owner) => {
-    const contact = await Contact.findOne({_id: contactId, owner})
+const getContactById = async (contactId) => {
+    const contact = await Contact.findById(contactId)
     if (!contact) {
-        return null
+        throw new WrongParamsError("Contact not found")
     };
     return contact
 }
 
 const addContact = async (body, owner) => {
     const { name, email, phone, favorite } = body
-    const contact = new Contact({ name, email, phone, favorite, owner })
-    await contact.save()
+    const contact = await Contact.create({ name, email, phone, favorite, owner })
     return contact
 }
 
-const removeContact = async (contactId, owner) => {
-    const contact = await Contact.findOneAndRemove({_id: contactId, owner})
+const removeContact = async (contactId) => {
+    const contact = await Contact.findByIdAndDelete(contactId)
     if (!contact) {
-        return null
+        throw new WrongParamsError("Contact not found")
     }
-    return contact
 }
 
-const updateContact = async (contactId, body, owner) => {
-    const contactUpdate = await Contact.findOneAndUpdate(
-        {_id: contactId, owner},
-        { $set: body },
+const updateContact = async (contactId, body) => {
+    const contactUpdate = await Contact.findByIdAndUpdate(
+        contactId,
+        body,
         { new: true }) 
+
+    if (!contactUpdate) {
+        throw new WrongParamsError("Contact not found")
+    }
     return contactUpdate
 }
 
 const updateStatusContact = async (contactId, favorite, owner) => {
-    const contactUpdateStatus = await Contact.findOneAndUpdate(
-        {_id: contactId, owner},
+    const contactUpdateStatus = await Contact.findByIdAndUpdate(
+        contactId,
         favorite,
-        { new: true })
+        { new: true }
+    )
+
+    if (!contactUpdateStatus) {
+        throw new WrongParamsError("Contact not found")
+    }
     return contactUpdateStatus
 }
+
 
 module.exports = {
     getContacts,

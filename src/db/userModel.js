@@ -18,11 +18,19 @@ const userSchema = new mongoose.Schema({
     enum: subscriptionTypes,
     default: "starter"
   },
+  avatarURL: {
+    type: String,
+    require: true,
+  },
   token: {
     type: String,
     default: null,
   }
-})
+  },
+  {
+    versionKey: false,
+  }
+)
 
 userSchema.pre('save', async function() {
   if (this.isNew) {

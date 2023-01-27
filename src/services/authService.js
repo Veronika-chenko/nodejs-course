@@ -1,37 +1,46 @@
-const { User } = require('../db/userModel')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
+const { JWT_SECRET } = process.env
+const { User } = require('../db/userModel')
+const { UnauthorizedError, WrongParamsError, ConflictError } = require('../helpers/errors')
 
-const registration = async ({email, password}) => {
-    const user = new User({ email, password})
-    await user.save();
-    return user
+const registration = async ({email, password}, avatarURL) => {
+    try {
+        const user = await User.create({ email, password, avatarURL })
+
+        return user
+    } catch (error) {
+        if (error.message.includes('E11000 duplicate key error')) {
+            throw new ConflictError("Email in use")
+        }
+        throw error
+    }
 }
 
 const login = async ({email, password}) => {
-    const user = await User.findOne({email})
-
+    const user = await User.findOne({ email })
     if (!user) {
-        return null
+        throw new UnauthorizedError("Email or password is wrong")
     }
 
-    if (!await bcrypt.compare(password, user.password)) {
-        return null
+    const isPasswordValid = await bcrypt.compare(password, user.password)
+    if (!isPasswordValid) {
+        throw new UnauthorizedError("Email or password is wrong")
     }
 
     const token = jwt.sign({
         _id: user._id,
-    }, process.env.JWT_SECRET)
-    await User.findOneAndUpdate(user._id, { $set: {token: token} },)
+    }, JWT_SECRET)
+    await User.findOneAndUpdate(user._id, {token: token})
 
     return {token, user}
 }
 
 const logout = async (id) => {
-    const user = await User.findByIdAndUpdate(id, {$set: {token: null}})
-
+    const user = await User.findByIdAndUpdate(id, {token: null})
+    
     if (!user) {
-        return null
+        throw new UnauthorizedError("Not authorized")
     }
 
     return user
@@ -40,18 +49,32 @@ const logout = async (id) => {
 const getCurrentUser = async (id) => {
     const user = await User.findById(id, {email: 1, subscription: 1, _id: 0 } )
     if (!user) {
-        return null
+        throw new UnauthorizedError("Not authorized")
     }
+
     return user
 }
 
 const updateSubscription = async (id, subscription) => {
     const user = await User.findByIdAndUpdate(
         id,
-        { $set: { subscription } },
-        { new: true, _id: 0 })
+        { subscription },
+        { new: true }
+    )
     if (!user) {
-        return null
+        throw new WrongParamsError("Not found")
+    }
+    return user
+}
+
+const updateAvatar = async (id, avatarURL) => {
+    const user = await User.findByIdAndUpdate(
+        id,
+        { avatarURL },
+        { new: true }
+    )
+    if (!user) {
+        throw new UnauthorizedError("Not authorized")
     }
     return user
 }
@@ -61,5 +84,6 @@ module.exports = {
     login,
     logout,
     getCurrentUser,
-    updateSubscription
+    updateSubscription,
+    updateAvatar
 }

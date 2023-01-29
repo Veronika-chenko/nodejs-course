@@ -4,9 +4,9 @@ const { JWT_SECRET } = process.env
 const { User } = require('../db/userModel')
 const { UnauthorizedError, WrongParamsError, ConflictError } = require('../helpers/errors')
 
-const registration = async ({email, password}, avatarURL) => {
+const registration = async ({email, password, verificationToken}, avatarURL) => {
     try {
-        const user = await User.create({ email, password, avatarURL })
+        const user = await User.create({ email, password, verificationToken, avatarURL })
 
         return user
     } catch (error) {
@@ -39,8 +39,12 @@ const login = async ({email, password}) => {
 const logout = async (id) => {
     const user = await User.findByIdAndUpdate(id, {token: null})
     
-    if (!user) {
+    if (!user || !user.verify) {
         throw new UnauthorizedError("Not authorized")
+    }
+
+    if (!user.verify) {
+        throw new UnauthorizedError("Email not verified")
     }
 
     return user
